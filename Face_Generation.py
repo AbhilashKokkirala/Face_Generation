@@ -1,18 +1,8 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[1]:
 
 
-# For tips on running notebooks in Google Colab, see
-# https://pytorch.org/tutorials/beginner/colab
-get_ipython().run_line_magic('matplotlib', 'inline')
-
-
-# In[2]:
-
-
-#%matplotlib inline
 import argparse
 import os
 import random
@@ -30,7 +20,7 @@ import matplotlib.animation as animation
 from IPython.display import HTML
 
 # Set random seed for reproducibility
-manualSeed = 999
+manualSeed = 42
 #manualSeed = random.randint(1, 10000) # use if you want new results
 print("Random Seed: ", manualSeed)
 random.seed(manualSeed)
@@ -38,41 +28,7 @@ torch.manual_seed(manualSeed)
 torch.use_deterministic_algorithms(True) # Needed for reproducible results
 
 
-# ## Inputs
-# 
-# 
-# 
-# -  ``dataroot`` - the path to the root of the dataset folder. We will
-#    talk more about the dataset in the next section.
-# -  ``workers`` - the number of worker threads for loading the data with
-#    the ``DataLoader``.
-# -  ``batch_size`` - the batch size used in training. The DCGAN paper
-#    uses a batch size of 128.
-# -  ``image_size`` - the spatial size of the images used for training.
-#    This implementation defaults to 64x64. If another size is desired,
-#    the structures of D and G must be changed. See
-#    [here](https://github.com/pytorch/examples/issues/70)_ for more
-#    details.
-# -  ``nc`` - number of color channels in the input images. For color
-#    images this is 3.
-# -  ``nz`` - length of latent vector.
-# -  ``ngf`` - relates to the depth of feature maps carried through the
-#    generator.
-# -  ``ndf`` - sets the depth of feature maps propagated through the
-#    discriminator.
-# -  ``num_epochs`` - number of training epochs to run. Training for
-#    longer will probably lead to better results but will also take much
-#    longer.
-# -  ``lr`` - learning rate for training. As described in the DCGAN paper,
-#    this number should be 0.0002.
-# -  ``beta1`` - beta1 hyperparameter for Adam optimizers. As described in
-#    paper, this number should be 0.5.
-# -  ``ngpu`` - number of GPUs available. If this is 0, code will run in
-#    CPU mode. If this number is greater than 0 it will run on that number
-#    of GPUs.
-# 
-# 
-# 
+# ## INPUTS
 
 # In[5]:
 
@@ -87,7 +43,6 @@ workers = 2
 batch_size = 128
 
 # Spatial size of training images. All images will be resized to this
-#   size using a transformer.
 image_size = 64
 
 # Number of channels in the training images. For color images this is 3
@@ -199,12 +154,6 @@ class Generator(nn.Module):
         return self.main(input)
 
 
-# Now, we can instantiate the generator and apply the ``weights_init``
-# function.
-# 
-# 
-# 
-
 # In[9]:
 
 
@@ -225,11 +174,7 @@ print(netG)
 
 # ### Discriminator
 
-# Discriminator Code
-# 
-# 
 
-# In[10]:
 
 
 class Discriminator(nn.Module):
@@ -261,11 +206,7 @@ class Discriminator(nn.Module):
         return self.main(input)
 
 
-# Now, as with the generator, we can create the discriminator, apply the
-# ``weights_init`` function.
-# 
-# 
-# 
+
 
 # In[11]:
 
@@ -286,14 +227,10 @@ print(netD)
 
 
 # ### Loss Functions and Optimizers
-# 
-# 
-# 
-
-# In[12]:
 
 
-# Initialize the ``BCELoss`` function
+
+# BCELoss function
 criterion = nn.BCELoss()
 
 # Create batch of latent vectors that we will use to visualize
@@ -304,23 +241,14 @@ fixed_noise = torch.randn(64, nz, 1, 1, device=device)
 real_label = 1.
 fake_label = 0.
 
-# Setup Adam optimizers for both G and D
+# Adam optimizers for both G and D
 optimizerD = optim.Adam(netD.parameters(), lr=lr, betas=(beta1, 0.999))
 optimizerG = optim.Adam(netG.parameters(), lr=lr, betas=(beta1, 0.999))
 
 
 # ### Training
-# 
-# 
-# 
-# 
-
-# In[ ]:
 
 
-# Training Loop
-
-# Lists to keep track of progress
 img_list = []
 G_losses = []
 D_losses = []
@@ -332,9 +260,7 @@ for epoch in range(num_epochs):
     # For each batch in the dataloader
     for i, data in enumerate(dataloader, 0):
         
-        ############################
-        # (1) Update D network: maximize log(D(x)) + log(1 - D(G(z)))
-        ###########################
+        # Update D network
         ## Train with all-real batch
         netD.zero_grad()
         # Format batch
@@ -367,9 +293,7 @@ for epoch in range(num_epochs):
         # Update D
         optimizerD.step()
 
-        ############################
-        # (2) Update G network: maximize log(D(G(z)))
-        ###########################
+        # Update G network
         netG.zero_grad()
         label.fill_(real_label)  # fake labels are real for generator cost
         # Since we just updated D, perform another forward pass of all-fake batch through D
@@ -402,22 +326,6 @@ for epoch in range(num_epochs):
 
 
 # ## Results
-# 
-# Finally, lets check out how we did. Here, we will look at three
-# different results. First, we will see how D and G’s losses changed
-# during training. Second, we will visualize G’s output on the fixed_noise
-# batch for every epoch. And third, we will look at a batch of real data
-# next to a batch of fake data from G.
-# 
-# **Loss versus training iteration**
-# 
-# Below is a plot of D & G’s losses versus training iterations.
-# 
-# 
-# 
-
-# In[4]:
-
 
 plt.figure(figsize=(10,5))
 plt.title("Generator and Discriminator Loss During Training")
@@ -429,17 +337,7 @@ plt.legend()
 plt.show()
 
 
-# **Visualization of G’s progression**
-# 
-# Remember how we saved the generator’s output on the fixed_noise batch
-# after every epoch of training. Now, we can visualize the training
-# progression of G with an animation. Press the play button to start the
-# animation.
-# 
-# 
-# 
 
-# In[20]:
 
 
 fig = plt.figure(figsize=(8,8))
@@ -451,17 +349,8 @@ HTML(ani.to_jshtml())
 
 
 # **Real Images vs. Fake Images**
-# 
-# Finally, lets take a look at some real images and fake images side by
-# side.
-# 
-# 
-# 
 
-# In[21]:
-
-
-# Grab a batch of real images from the dataloader
+# Take a batch of real images from the dataloader
 real_batch = next(iter(dataloader))
 
 # Plot the real images
@@ -478,12 +367,6 @@ plt.title("Fake Images")
 plt.imshow(np.transpose(img_list[-1],(1,2,0)))
 plt.show()
 
-
-# 
-# 
-# 
-# 
-
 # In[28]:
 
 
@@ -491,29 +374,9 @@ torch.save(netD.state_dict(), 'Discriminator_weights.pth')
 torch.save(netG.state_dict(), 'Generator_weights.pth')
 
 
-# In[29]:
 
 
-model = netG # we do not specify ``weights``, i.e. create untrained model
-model.load_state_dict(torch.load('Generator_weights.pth'))
-model.eval()
 
-
-# In[30]:
-
-
-for para in model.parameters():
-    print(para)
-
-
-# In[31]:
-
-
-for para in netG.parameters():
-    print(para)
-
-
-# In[ ]:
 
 
 
